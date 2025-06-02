@@ -27,8 +27,7 @@ jobs:
         with:
           api-level: 28
           target: default
-          arch: x86_64
-          profile: Nexus 4
+          arch: arm64-v8a
           script: ./gradlew connectedCheck --continue
 
       - name: Build
@@ -45,4 +44,4 @@ jobs:
         if: always()
         with:
           name: ConnectBot
-          path: /opt/*
+          path: /opt/ConnectBot.tar.gz
