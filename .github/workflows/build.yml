@@ -1,12 +1,12 @@
-name: ConnectBot Build
+name: ConnectBot Build_b
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+    tags:
+      - "v*.*.*"
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
@@ -25,9 +25,46 @@ jobs:
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
-          script: ./gradlew connectedCheck
+          api-level: 28
+          target: default
+          arch: x86_64
+          profile: Nexus 4
+          script: ./gradlew connectedCheck --continue
 
       - name: Build
+        run: ./gradlew build bundleGoogleRelease
+
+      - name: Prepare release
+        if: ${{ github.event_name == 'push' }}
         run: |
-          ./gradlew build
+          if git describe --exact-match; then \
+            TAGGED=yes
+          fi
+
+          if [[ -n $TAGGED ]]; then
+            GITHUB_TAG="$(git describe)"
+            echo "${GITHUB_TAG}" > tag.txt
+            echo "Release ${GITHUB_TAG}" > release-title.txt
+          else \
+            GITHUB_TAG="git-$(git describe)"
+            GITHUB_TITLE="$(git log -1 --pretty=%B | head -1)"
+            echo "${GITHUB_TAG}" > tag.txt
+            echo "${GITHUB_TAG}: ${GITHUB_TITLE}" > release-title.txt
+          fi
+          cp ./app/build/outputs/apk/oss/release/app-oss-release-unsigned.apk ConnectBot-${GITHUB_TAG}-oss-unsigned.apk
+          cp ./app/build/outputs/apk/google/release/app-google-release-unsigned.apk ConnectBot-${GITHUB_TAG}-google-unsigned.apk
+          cp ./app/build/outputs/bundle/googleRelease/app-google-release.aab ConnectBot-${GITHUB_TAG}-google-unsigned.aab
+          cp ./app/build/outputs/native-debug-symbols/googleRelease/native-debug-symbols.zip ConnectBot-${GITHUB_TAG}-google.native-debug-symbols.zip
+          cp ./app/build/outputs/native-debug-symbols/ossRelease/native-debug-symbols.zip ConnectBot-${GITHUB_TAG}-oss.native-debug-symbols.zip
+  
+      - name: Store artifacts for upload
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/upload-artifact@master
+        with:
+          name: apk
+          path: |
+            release-title.txt
+            tag.txt
+            ConnectBot-*-unsigned.apk
+            ConnectBot-*-unsigned.aab
+            ConnectBot-*.native-debug-symbols.zip
