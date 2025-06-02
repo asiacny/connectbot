@@ -31,29 +31,3 @@ jobs:
       - name: Build
         run: |
           ./gradlew build
-
-name: ConnectBot Build
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Android SDK
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          androidSdk: 34
-
-      - name: Build
-        run: |
-          ./gradlew build
