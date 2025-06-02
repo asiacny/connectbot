@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: checkout
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Enable KVM
         run: |
@@ -27,6 +27,32 @@ jobs:
         with:
           api-level: 29
           script: ./gradlew connectedCheck
+
+      - name: Build
+        run: |
+          ./gradlew build
+
+name: ConnectBot Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Android SDK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          androidSdk: 34
 
       - name: Build
         run: |
